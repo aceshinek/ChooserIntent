@@ -131,9 +131,13 @@ public class ResolverActivity extends Activity {
         } catch (RemoteException e) {
             mLaunchedFromUid = -1;
         }
+        
         mPm = getPackageManager();
+        
         mAlwaysUseOption = canAlwaysUse(alwaysUseOption, intent);
         mRegistered = true;
+        
+        
         final ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         mIconDpi = am.getLauncherLargeIconDensity();
 
@@ -1037,6 +1041,7 @@ public class ResolverActivity extends Activity {
                 Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0),
                         context.getText(R.string.share_dialog_send_method));
                 LabeledIntent[] li = targetedShareIntents.toArray(new LabeledIntent[targetedShareIntents.size()]);
+                LabeledIntent l;
 
                 chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, li);
                 return chooserIntent;
