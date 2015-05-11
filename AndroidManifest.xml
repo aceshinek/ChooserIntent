@@ -15,6 +15,7 @@
         android:theme="@style/AppTheme" >
         
         <activity android:name="com.smartisan.notes.intentchooser.ResolverActivity" />
+        <activity android:name="com.smartisan.notes.intentchooser.ChooserActivity" />
         
         <activity
             android:name=".MainActivity"

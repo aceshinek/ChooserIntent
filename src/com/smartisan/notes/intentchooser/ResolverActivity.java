@@ -97,35 +97,15 @@ public class ResolverActivity extends Activity {
 
     private boolean mRegistered;
 
-    private Intent makeMyIntent() {
-        Intent intent = new Intent(getIntent());
-        intent.setComponent(null);
-        // The resolver activity is set to be hidden from recent tasks.
-        // we don't want this attribute to be propagated to the next activity
-        // being launched.  Note that if the original Intent also had this
-        // flag set, we are now losing it.  That should be a very rare case
-        // and we can live with this.
-        intent.setFlags(intent.getFlags()&~Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        return intent;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Use a specialized prompt when we're handling the 'Home' app startActivity()
-        final int titleResource;
-        final Intent intent = makeMyIntent();
-        final Set<String> categories = intent.getCategories();
-        if (Intent.ACTION_MAIN.equals(intent.getAction())
-                && categories != null
-                && categories.size() == 1
-                && categories.contains(Intent.CATEGORY_HOME)) {
-            titleResource = com.android.internal.R.string.whichHomeApplication;
-        } else {
-            titleResource = com.android.internal.R.string.whichApplication;
-        }
+        final int titleResource =  com.android.internal.R.string.whichApplication;
+        List<String> pkg = new ArrayList<>();
+        pkg.add("com.sina.weibo");
+        Intent labeledIntents = shareExludingApp(getApplicationContext(), pkg, "text/plain", "123", null);
 
-        onCreate(savedInstanceState, intent, getResources().getText(titleResource),
-                null, null, true);
+        onCreate(savedInstanceState, labeledIntents, getResources().getText(titleResource), null, null, true);
     }
 
     protected void onCreate(Bundle savedInstanceState, Intent intent,
@@ -1012,5 +992,73 @@ public class ResolverActivity extends Activity {
                 return position;
             }
         }
+    }
+    
+    
+    public static Intent shareExludingApp(Context context, List<String> packageNameToExclude, String shareType,
+            String shareTextContent, Uri shareExtraStream) {
+        // String readString = null;
+        // if (shareTextContent != null && shareTextContent.length() > 20000) {
+        // readString = shareTextContent.subSequence(0, 20000).toString();
+        // } else {
+        // readString = shareTextContent;
+        // }
+        Intent shareToIntent = chooserIntent(shareType, shareExtraStream, shareTextContent);
+        if (packageNameToExclude == null || packageNameToExclude.isEmpty()) {
+            return null;
+        }
+
+        List<Intent> targetedShareIntents = new ArrayList<Intent>();
+        List<ResolveInfo> resInfo = context.getPackageManager().queryIntentActivities(
+                shareToIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        if (!resInfo.isEmpty()) {
+            for (ResolveInfo info : resInfo) {
+                if (!packageNameToExclude.contains(info.activityInfo.packageName)) {
+                    Intent targetedShare = chooserIntent(shareType, shareExtraStream, shareTextContent);
+                    targetedShare.setComponent(new ComponentName(info.activityInfo.packageName, info.activityInfo.name));
+                    targetedShare.setPackage(info.activityInfo.packageName);
+                    targetedShareIntents.add(new LabeledIntent(targetedShare, info.activityInfo.packageName, info
+                            .loadLabel(context.getPackageManager()), info.icon));
+                }
+            }
+            // add sina item
+            Intent sinaIntent = chooserIntent(shareType, shareExtraStream, shareTextContent);
+            sinaIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ComponentName cn = new ComponentName(context, MainActivity.class);
+            sinaIntent.setComponent(cn);
+//            sinaIntent.putExtra(Constants.IS_LONG_WEIBO, shareExtraStream != null);
+//            sinaIntent.putExtra(Constants.NORMAL_WEIBO_CONTENT, shareTextContent);
+//            sinaIntent.putExtra(LongLengthWeiboActivity.IMAGE_FILE_NAME, getRealPath(shareExtraStream, context));
+            targetedShareIntents.add(1,
+                    new LabeledIntent(sinaIntent, context.getPackageName(), context.getText(R.string.share_note_weibo),
+                            R.drawable.ic_launcher));
+
+            if (targetedShareIntents.size() > 0) {
+                Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0),
+                        context.getText(R.string.share_dialog_send_method));
+                LabeledIntent[] li = targetedShareIntents.toArray(new LabeledIntent[targetedShareIntents.size()]);
+
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, li);
+                return chooserIntent;
+            } else {
+                return null;
+            }
+        }
+        return null;
+    }
+    
+    private static Intent chooserIntent(String shareType, Uri shareExtraStream, String readString) {
+        Intent targetedShare = new Intent(android.content.Intent.ACTION_SEND);
+
+        targetedShare.setAction(Intent.ACTION_SEND);
+        targetedShare.setType(shareType);
+        if (!TextUtils.isEmpty(readString)) {
+            targetedShare.putExtra(Intent.EXTRA_TEXT, readString);
+        }
+        if (shareType.contains("image") && shareExtraStream != null) {
+            targetedShare.putExtra(Intent.EXTRA_STREAM, shareExtraStream);
+        }
+        targetedShare.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return targetedShare;
     }
 }
