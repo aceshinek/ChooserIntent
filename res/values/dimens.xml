@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <dimen name="switch_title_size">18sp</dimen>
+    <dimen name="item_sub_title_size">10sp</dimen>
+    <dimen name="item_icon_right_margin">20dp</dimen>
+    <dimen name="switch_margin_top">20dp</dimen>
+    <dimen name="switch_padding_left">15dp</dimen>
+    <dimen name="switch_padding_right">10dp</dimen>
+    <dimen name="switch_margin_bottom">15dp</dimen>
+    <dimen name="switch_title_max_width">234dp</dimen>
+
+    <dimen name="tips_max_width">300dp</dimen>
+
+    <dimen name="title_back_btn_max_width">101.7dp</dimen>
+    <dimen name="title_place_holder_min_width">6dip</dimen>
+    <dimen name="title_bar_btn_text_size">13.5dip</dimen>
+    <dimen name="title_bar_title_text_size">21dip</dimen>
+
+    <!-- resolver dimens -->
+    <dimen name="icon_size">40dp</dimen>
+    <dimen name="grid_item_height">93dp</dimen>
+    <dimen name="grid_bottom_padding">30dp</dimen>
+    <dimen name="indicator_min_height">2dp</dimen>
+    <dimen name="text_max_length_portrait">96dp</dimen>
+    <dimen name="text_max_length_landscape">170dp</dimen>
+
+    <!-- name avater symbol-->
+    <dimen name="name_avatar_font_offset_top">3.3dp</dimen>
+    <dimen name="name_avatar_font_offset_left">0.3dp</dimen>
+    <dimen name="name_avatar_font_size">34sp</dimen>
+
+    <dimen name="menu_dialog_multi_list_height">237dp</dimen>
+</resources>

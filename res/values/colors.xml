@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+   <color name="dark">#CC000000</color>
+   <color name="setting_item_text_color">#565960</color>
+   <color name="setting_item_text_color_disabled">#BABABA</color>
+
+    <color name="white">#FFF</color>
+    <color name="icon_shadow">#33000000</color>
+
+    <color name="sm_password_tip">#5F616A</color>
+    <color name="sm_password_tip_wrong">#b95353</color>
+</resources>
