@@ -3,24 +3,22 @@ package com.smartisan.notes.intentchooser;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.smartisan.notes.intentchooser.ResolverActivity.ViewHolder;
-
 import smartisanos.app.IndicatorView;
 import smartisanos.view.PagerAdapter;
 import smartisanos.view.ViewPager;
+
+import com.smartisan.notes.intentchooser.ResolverActivity.ViewHolder;
+
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.LabeledIntent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.Point;
 import android.net.Uri;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,12 +26,11 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
-import android.widget.Toast;
+import android.widget.AdapterView.OnItemClickListener;
 
-public class ChooserActivity extends Activity {
+public class ChooserDialog extends Dialog {
 
     public static final String EXCLOUD_PKG = "excloud_pkg";
 
@@ -47,36 +44,20 @@ public class ChooserActivity extends Activity {
     
     private ChooserPagerAdapter mChooserPagerAdapter;
     
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Intent intent = getIntent();
-        mType = intent.getType();
-        mExtraText = intent.getExtras().getString(Intent.EXTRA_TEXT);
-        mExtraStream = intent.getExtras().getParcelable(Intent.EXTRA_STREAM);
-        mExcloud = intent.getExtras().getStringArrayList(EXCLOUD_PKG);
-        
-        Toast.makeText(getApplicationContext(), "" + mType, Toast.LENGTH_SHORT).show();
 
+    public ChooserDialog(Context context, String mType, String extraText, Uri extraStream, ArrayList<String> excloudPkg){
+        super(context, R.style.ShareDialogTheme);
+        setOwnerActivity((Activity)context);
+        initWindow();
         setContentView(R.layout.resolver_layout);
-        Window window = getWindow();
-        window.setGravity(Gravity.BOTTOM);
-        WindowManager.LayoutParams lp = window.getAttributes();
-        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE))
-                .getDefaultDisplay();
-//        lockOritation(display.getRotation());
-        Point point = new Point();
-        display.getSize(point);
-        lp.width = point.x;
-        window.setAttributes(lp);
         
-        this.setFinishOnTouchOutside(true);
-        
-        List<Intent> targetedShareIntents = new ArrayList<Intent>();
-        
+        this.mType = mType;
+        this.mExtraText = extraText;
+        this.mExtraStream = extraStream;
+        this.mExcloud = excloudPkg;
         Intent shareToIntent = chooserIntent(mType  , mExtraStream, mExtraText);
 
-        List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities(
+        List<ResolveInfo> resInfo = getContext().getPackageManager().queryIntentActivities(
                 shareToIntent, PackageManager.MATCH_DEFAULT_ONLY);
         int pageNumber = 0;
         if (resInfo.size() <= 6) {
@@ -88,7 +69,7 @@ public class ChooserActivity extends Activity {
                 pageNumber = (resInfo.size() - (resInfo.size() % 6)) / 6 + 1;
             }
         }
-        LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
+        LayoutInflater inflater = LayoutInflater.from(getContext().getApplicationContext());
         List<GridView> gridViews = new ArrayList<>();
         for (int i = 0, j = 0; i < pageNumber; i++) {
             View view = (View) inflater.inflate(R.layout.resolver_grid, null);
@@ -100,7 +81,7 @@ public class ChooserActivity extends Activity {
             List<ResolveInfo> rList = new ArrayList<>();
             int end = (j + 6) > resInfo.size() ? resInfo.size() : (j + 6);
             rList.addAll(resInfo.subList(j, end));
-            final GridViewAdapter gridViewAdapter = new GridViewAdapter(getApplicationContext(), rList);
+            final GridViewAdapter gridViewAdapter = new GridViewAdapter(getContext().getApplicationContext(), rList);
             gridView.setAdapter(gridViewAdapter);
             gridView.setOnItemClickListener(new OnItemClickListener() {
 
@@ -120,17 +101,8 @@ public class ChooserActivity extends Activity {
         
         init();
         
-        
-        
-        
-//        
-//        for (ResolveInfo info : resInfo) {
-//            if (!mExcloud.contains(info.activityInfo.packageName)) {
-//                startActivityByResolveInfo(info);
-//            }
-//        }
     }
-
+    
     private void startActivityByResolveInfo(ResolveInfo info) {
         Intent targetedShare = new Intent(Intent.ACTION_SEND);
 //                targetedShare.setAction(Intent.ACTION_SEND);
@@ -152,8 +124,34 @@ public class ChooserActivity extends Activity {
 //        startActivity(targetedShare);
 //        finish();
     }
+
+    private void init(){
+        mViewPager = (ViewPager) findViewById(R.id.viewPager);
+        mViewPager.setAdapter(mChooserPagerAdapter);
+        mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+
+            @Override
+            public void onPageSelected(int arg0) {
+                mIndicatorView.setState(mChooserPagerAdapter.getCount(), arg0);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int arg0) {
+            }
+
+            @Override
+            public void onPageScrolled(int arg0, float arg1, int arg2) {
+            }
+        });
+    }
     
-    
+    private void initWindow() {
+        Window window = getWindow();
+        window.setGravity(Gravity.BOTTOM);
+        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+        window.addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH);
+        window.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+    }
     
     private class GridViewAdapter extends BaseAdapter {
         private  LayoutInflater mInflater;
@@ -188,9 +186,9 @@ public class ChooserActivity extends Activity {
 
         private final void bindView(View view, final int position) {
             final ViewHolder holder = (ViewHolder) view.getTag();
-            holder.text.setMaxWidth(getResources().getDimensionPixelSize(R.dimen.text_max_length_portrait));
-            holder.text.setText(mResolveInfos.get(position).loadLabel(getPackageManager()));
-            holder.icon.setImageDrawable(mResolveInfos.get(position).loadIcon(getPackageManager()));
+            holder.text.setMaxWidth(getContext().getResources().getDimensionPixelSize(R.dimen.text_max_length_portrait));
+            holder.text.setText(mResolveInfos.get(position).loadLabel(getContext().getPackageManager()));
+            holder.icon.setImageDrawable(mResolveInfos.get(position).loadIcon(getContext().getPackageManager()));
         }
 
         @Override
@@ -204,25 +202,6 @@ public class ChooserActivity extends Activity {
         }
     }
     
-    private void init(){
-        mViewPager = (ViewPager) findViewById(R.id.viewPager);
-        mViewPager.setAdapter(mChooserPagerAdapter);
-        mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-
-            @Override
-            public void onPageSelected(int arg0) {
-                mIndicatorView.setState(mChooserPagerAdapter.getCount(), arg0);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int arg0) {
-            }
-
-            @Override
-            public void onPageScrolled(int arg0, float arg1, int arg2) {
-            }
-        });
-    }
     
     private final class ChooserPagerAdapter extends PagerAdapter {
         public ChooserPagerAdapter(List<GridView> gridViews) {
@@ -277,4 +256,5 @@ public class ChooserActivity extends Activity {
         targetedShare.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return targetedShare;
     }
+    
 }

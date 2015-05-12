@@ -35,7 +35,10 @@ public class MainActivity extends Activity {
 ////        
 //        intent.putExtra(Intent.EXTRA_INITIAL_INTENTS, labeledIntents);
         
-        startActivity(intent);
+//        startActivity(intent);
+        
+        ChooserDialog chooserDialog = new ChooserDialog(this, "text/plain", "22233", null, pkg);
+        chooserDialog.show();
     }
 
     
