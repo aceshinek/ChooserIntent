@@ -15,13 +15,18 @@ import android.content.Intent;
 import android.content.pm.LabeledIntent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
@@ -55,7 +60,18 @@ public class ChooserActivity extends Activity {
         Toast.makeText(getApplicationContext(), "" + mType, Toast.LENGTH_SHORT).show();
 
         setContentView(R.layout.resolver_layout);
+        Window window = getWindow();
+        window.setGravity(Gravity.BOTTOM);
+        WindowManager.LayoutParams lp = window.getAttributes();
+        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE))
+                .getDefaultDisplay();
+//        lockOritation(display.getRotation());
+        Point point = new Point();
+        display.getSize(point);
+        lp.width = point.x;
+        window.setAttributes(lp);
         
+        this.setFinishOnTouchOutside(true);
         
         Intent shareToIntent = chooserIntent(mType  , mExtraStream, mExtraText);
 
